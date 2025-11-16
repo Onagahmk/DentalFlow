@@ -2,7 +2,7 @@ package com.rodrigodecastro.dentalflow.ui.theme
 
 import androidx.compose.ui.graphics.Color
 
-// Paleta de cores inspirada na referência (Tons de Roxo/Azul Suave)
+
 
 // Cores para o Tema Claro (Light Theme)
 val AppPrimary = Color(0xFF6A79E8)       // Roxo/Azul principal para botões e destaques

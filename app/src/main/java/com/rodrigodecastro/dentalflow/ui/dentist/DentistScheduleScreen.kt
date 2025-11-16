@@ -25,6 +25,10 @@ import com.rodrigodecastro.dentalflow.viewmodel.AppointmentViewModel
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 
+/**
+ * A tela principal do dentista, exibindo a lista de agendamentos.
+ * Esta tela é reativa e observa as mudanças do `AppointmentViewModel`.
+ */
 @RequiresApi(Build.VERSION_CODES.O)
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -35,17 +39,24 @@ fun DentistScheduleScreen(
     appointmentViewModel: AppointmentViewModel,
     dentistId: String
 ) {
+    // Observa os StateFlows do ViewModel. A UI será recomposta automaticamente quando esses valores mudarem.
     val appointments by appointmentViewModel.appointments.collectAsState()
     val loading by appointmentViewModel.loadingState.collectAsState()
     val dentistName by appointmentViewModel.dentistName.collectAsState()
 
+    // Estados locais da tela para controlar a busca e o diálogo de exclusão.
     var searchQuery by remember { mutableStateOf("") }
     var appointmentToDelete by remember { mutableStateOf<Appointment?>(null) }
     var showDeleteConfirmation by remember { mutableStateOf(false) }
 
+    // Estado para o componente "puxar para atualizar" (pull-to-refresh).
     val pullToRefreshState = rememberPullToRefreshState()
 
-    // Efeito para carregar os dados iniciais
+    // --- EFEITOS (LaunchedEffect) --- //
+
+    // Carrega os dados iniciais (agendamentos e nome do dentista) assim que a tela
+    // recebe um dentistId válido. O `key1 = dentistId` garante que isso só execute
+    // uma vez ou se o ID do dentista mudar.
     LaunchedEffect(dentistId) {
         if (dentistId.isNotEmpty()) {
             appointmentViewModel.loadAppointments(dentistId)
@@ -53,29 +64,38 @@ fun DentistScheduleScreen(
         }
     }
 
-    // Efeito para lidar com o refresh
+    // Gerencia a lógica do "puxar para atualizar".
+    // Se o estado indicar que o usuário puxou a tela, ele aciona o recarregamento dos dados.
     if (pullToRefreshState.isRefreshing) {
         LaunchedEffect(true) {
             appointmentViewModel.loadAppointments(dentistId)
         }
     }
 
-    // Efeito para parar a animação do refresh quando o 'loading' terminar
+    // Observa o estado de carregamento do ViewModel para parar a animação do pull-to-refresh.
+    // Isso desacopla a animação da UI da lógica de carregamento de dados.
     LaunchedEffect(loading) {
         if (!loading) {
             pullToRefreshState.endRefresh()
         }
     }
 
+    // --- LÓGICA DE FILTRO E ORDENAÇÃO --- //
+
+    // A lista de agendamentos exibida é um valor computado.
+    // Primeiro, filtra a lista original com base na `searchQuery`.
+    // Depois, ordena a lista filtrada pela data. O `try-catch` lida com datas mal formatadas.
     val filteredAndSortedAppointments = appointments.filter { appointment ->
         appointment.patientName.contains(searchQuery, ignoreCase = true)
     }.sortedBy { appointment ->
         try {
             LocalDate.parse(appointment.date, DateTimeFormatter.ofPattern("dd/MM/yyyy"))
         } catch (_: Exception) {
-            LocalDate.MIN
+            LocalDate.MIN // Joga datas inválidas para o início da lista.
         }
     }
+
+    // --- UI (COMPOSABLES) --- //
 
     Scaffold(
         topBar = {
@@ -89,18 +109,20 @@ fun DentistScheduleScreen(
             )
         }
     ) { paddingValues ->
+        // O Box serve como container para o `PullToRefresh` e o conteúdo principal.
+        // O `nestedScroll` conecta o gesto de scroll da lista com o estado do `pullToRefreshState`.
         Box(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(paddingValues)
-                .nestedScroll(pullToRefreshState.nestedScrollConnection) // Conexão do scroll
+                .nestedScroll(pullToRefreshState.nestedScrollConnection)
         ) {
             Column(
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(16.dp)
             ) {
-                // Header
+                // Seção do cabeçalho com saudação e campo de busca.
                 Column(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalAlignment = Alignment.CenterHorizontally
@@ -127,10 +149,12 @@ fun DentistScheduleScreen(
                     Spacer(modifier = Modifier.height(16.dp))
                 }
 
+                // Lista principal de agendamentos.
                 LazyColumn(
                     modifier = Modifier.weight(1f),
                     verticalArrangement = Arrangement.spacedBy(16.dp)
                 ) {
+                    // Exibe o esqueleto (shimmer) APENAS no primeiro carregamento.
                     if (loading && appointments.isEmpty()) {
                         items(5) { _ -> AppointmentCardSkeleton() }
                     } else if (filteredAndSortedAppointments.isNotEmpty()) {
@@ -145,6 +169,7 @@ fun DentistScheduleScreen(
                             )
                         }
                     } else {
+                        // Mensagem para o caso de lista vazia (após o loading).
                         item {
                             Box(modifier = Modifier.fillParentMaxSize()) {
                                 Column(
@@ -167,6 +192,7 @@ fun DentistScheduleScreen(
 
                 Spacer(modifier = Modifier.height(16.dp))
 
+                // Seção de botões de ação no rodapé.
                 Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                     Button(
                         onClick = onCreateAppointment,
@@ -183,6 +209,8 @@ fun DentistScheduleScreen(
                 }
             }
 
+            // O container da animação do "puxar para atualizar".
+            // Fica "por cima" do conteúdo, alinhado ao topo.
             PullToRefreshContainer(
                 state = pullToRefreshState,
                 modifier = Modifier.align(Alignment.TopCenter)
@@ -190,6 +218,8 @@ fun DentistScheduleScreen(
         }
     }
 
+    // Diálogo de confirmação para exclusão de agendamento.
+    // Só é exibido quando `showDeleteConfirmation` é true.
     if (showDeleteConfirmation && appointmentToDelete != null) {
         AlertDialog(
             onDismissRequest = {

@@ -18,7 +18,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
-import com.rodrigodecastro.dentalflow.data.models.Appointment
 import com.rodrigodecastro.dentalflow.ui.components.TimePickerDialog
 import com.rodrigodecastro.dentalflow.utils.PhoneVisualTransformation
 import com.rodrigodecastro.dentalflow.viewmodel.AppointmentViewModel
@@ -27,20 +26,33 @@ import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import java.util.Locale
 
+/**
+ * Tela para editar um agendamento existente.
+ * Carrega os dados do agendamento, permite a modificação e salva as alterações.
+ */
 @RequiresApi(Build.VERSION_CODES.O)
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun EditAppointmentScreen(
-    appointmentId: String,
+    appointmentId: String, // O ID do agendamento a ser editado, recebido via navegação.
     appointmentViewModel: AppointmentViewModel,
-    onAppointmentUpdated: () -> Unit,
+    onAppointmentUpdated: () -> Unit, // Callback para navegar de volta após salvar.
     onCancel: () -> Unit
 ) {
+    // --- Lógica de Estado ---
+
+    // Observa a lista completa de agendamentos do ViewModel.
     val appointments by appointmentViewModel.appointments.collectAsState()
+
+    // Encontra o agendamento específico que corresponde ao ID recebido.
+    // `remember` com `keys` garante que a busca só será refeita se a lista ou o ID mudarem.
     val appointment = remember(appointments, appointmentId) {
         appointments.find { it.id == appointmentId }
     }
 
+    // Estados locais para cada campo do formulário.
+    // `remember(appointment)` garante que os estados sejam reinicializados com os novos dados
+    // sempre que o objeto `appointment` mudar (ou seja, quando for encontrado na lista).
     var patientName by remember(appointment) { mutableStateOf(appointment?.patientName ?: "") }
     var patientPhone by remember(appointment) { mutableStateOf(appointment?.patientPhone ?: "") }
     var patientEmail by remember(appointment) { mutableStateOf(appointment?.patientEmail ?: "") }
@@ -49,8 +61,11 @@ fun EditAppointmentScreen(
     var procedure by remember(appointment) { mutableStateOf(appointment?.procedure ?: "") }
     var notes by remember(appointment) { mutableStateOf(appointment?.notes ?: "") }
 
+    // Estados para controlar a visibilidade dos seletores de data e hora.
     var showDatePicker by remember { mutableStateOf(false) }
     var showTimePicker by remember { mutableStateOf(false) }
+
+    // --- Diálogos de Seleção ---
 
     if (showDatePicker) {
         val datePickerState = rememberDatePickerState()
@@ -87,15 +102,22 @@ fun EditAppointmentScreen(
         )
     }
 
+    // --- UI ---
+
     Scaffold(
         topBar = { TopAppBar(title = { Text("Editar Agendamento") }) }
     ) { paddingValues ->
-        Surface(modifier = Modifier.fillMaxSize().padding(paddingValues)) {
+        Surface(modifier = Modifier
+            .fillMaxSize()
+            .padding(paddingValues)) {
+            // Exibe um indicador de progresso enquanto o agendamento não for encontrado.
+            // Isso acontece brevemente no início, até que o `remember` encontre os dados.
             if (appointment == null) {
                 Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                     CircularProgressIndicator()
                 }
             } else {
+                // Formulário principal, exibido quando os dados do agendamento estão prontos.
                 Column(
                     modifier = Modifier
                         .fillMaxSize()
@@ -104,10 +126,14 @@ fun EditAppointmentScreen(
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
                     Card(
-                        modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 8.dp),
                         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
                     ) {
-                        Column(modifier = Modifier.fillMaxWidth().padding(24.dp)) {
+                        Column(modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(24.dp)) {
                             Text("Editar Agendamento", style = MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.Bold), color = MaterialTheme.colorScheme.primary)
                             Spacer(modifier = Modifier.height(32.dp))
 
@@ -125,6 +151,7 @@ fun EditAppointmentScreen(
                             OutlinedTextField(value = patientEmail, onValueChange = { patientEmail = it }, label = { Text("E-mail do Paciente") }, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email), modifier = Modifier.fillMaxWidth())
                             Spacer(modifier = Modifier.height(16.dp))
 
+                            // Campos de Data e Hora não editáveis manualmente, apenas via diálogos.
                             OutlinedTextField(
                                 value = date,
                                 onValueChange = {},
@@ -132,7 +159,9 @@ fun EditAppointmentScreen(
                                 enabled = false,
                                 readOnly = true,
                                 trailingIcon = { Icon(Icons.Default.DateRange, "Selecionar Data") },
-                                modifier = Modifier.fillMaxWidth().clickable(interactionSource = remember { MutableInteractionSource() }, indication = null) { showDatePicker = true },
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .clickable(interactionSource = remember { MutableInteractionSource() }, indication = null) { showDatePicker = true },
                                 colors = OutlinedTextFieldDefaults.colors(disabledBorderColor = MaterialTheme.colorScheme.outline, disabledTextColor = MaterialTheme.colorScheme.onSurface)
                             )
 
@@ -145,19 +174,26 @@ fun EditAppointmentScreen(
                                 enabled = false,
                                 readOnly = true,
                                 trailingIcon = { Icon(Icons.Default.AccessTime, "Selecionar Horário") },
-                                modifier = Modifier.fillMaxWidth().clickable(interactionSource = remember { MutableInteractionSource() }, indication = null) { showTimePicker = true },
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .clickable(interactionSource = remember { MutableInteractionSource() }, indication = null) { showTimePicker = true },
                                 colors = OutlinedTextFieldDefaults.colors(disabledBorderColor = MaterialTheme.colorScheme.outline, disabledTextColor = MaterialTheme.colorScheme.onSurface)
                             )
 
                             Spacer(modifier = Modifier.height(16.dp))
                             OutlinedTextField(value = procedure, onValueChange = { procedure = it }, label = { Text("Procedimento") }, modifier = Modifier.fillMaxWidth())
                             Spacer(modifier = Modifier.height(16.dp))
-                            OutlinedTextField(value = notes, onValueChange = { notes = it }, label = { Text("Observações") }, modifier = Modifier.fillMaxWidth().height(100.dp), singleLine = false)
+                            OutlinedTextField(value = notes, onValueChange = { notes = it }, label = { Text("Observações") }, modifier = Modifier
+                                .fillMaxWidth()
+                                .height(100.dp), singleLine = false)
 
                             Spacer(modifier = Modifier.height(32.dp))
+
+                            // Botões de ação
                             Column(modifier = Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(12.dp)) {
                                 Button(
                                     onClick = {
+                                        // Cria uma cópia do agendamento original com os dados atualizados.
                                         val updatedAppointment = appointment.copy(
                                             patientName = patientName,
                                             patientPhone = patientPhone,
@@ -167,11 +203,14 @@ fun EditAppointmentScreen(
                                             procedure = procedure,
                                             notes = notes
                                         )
+                                        // Chama o ViewModel para salvar as alterações e navega de volta.
                                         appointmentViewModel.updateAppointment(updatedAppointment)
                                         onAppointmentUpdated()
                                     },
-                                    enabled = true, // Adicionar validação depois
-                                    modifier = Modifier.fillMaxWidth().height(50.dp)
+                                    enabled = true, // TODO: Adicionar validação de formulário semelhante à tela de criação.
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .height(50.dp)
                                 ) {
                                     Text("Salvar Alterações")
                                 }

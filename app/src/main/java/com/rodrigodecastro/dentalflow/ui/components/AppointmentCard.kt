@@ -26,6 +26,15 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.rodrigodecastro.dentalflow.data.models.Appointment
 
+/**
+ * Um Composable que exibe as informações de um único agendamento em um card.
+ * Este é um componente reutilizável e de visualização pura (stateless).
+ *
+ * @param appointment O objeto `Appointment` contendo os dados a serem exibidos.
+ * @param onEditClick Callback acionado quando o usuário clica em "Editar".
+ * @param onDeleteClick Callback acionado quando o usuário clica em "Excluir".
+ * @param modifier Modificador para customização externa.
+ */
 @Composable
 fun AppointmentCard(
     appointment: Appointment,
@@ -33,6 +42,8 @@ fun AppointmentCard(
     onDeleteClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
+    // A cor da borda do card muda para indicar um estado de erro no envio do e-mail.
+    // Isso fornece um feedback visual importante diretamente na lista.
     val cardBorderColor = if (appointment.emailStatus == "ERROR") {
         MaterialTheme.colorScheme.error
     } else {
@@ -42,7 +53,7 @@ fun AppointmentCard(
     Card(
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-        border = BorderStroke(1.dp, cardBorderColor), // Aplica a borda condicional
+        border = BorderStroke(1.dp, cardBorderColor), // Aplica a borda condicional.
         modifier = modifier
             .fillMaxWidth()
             .padding(vertical = 4.dp)
@@ -52,6 +63,7 @@ fun AppointmentCard(
                 .fillMaxWidth()
                 .padding(16.dp)
         ) {
+            // --- Seção de Cabeçalho: Data, Hora e Status ---
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween
@@ -62,6 +74,7 @@ fun AppointmentCard(
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.primary
                 )
+                // A cor do status também é condicional para destaque.
                 Text(
                     text = appointment.status,
                     style = MaterialTheme.typography.labelSmall,
@@ -72,6 +85,8 @@ fun AppointmentCard(
                     }
                 )
             }
+
+            // --- Detalhes do Paciente e Procedimento ---
             Text(
                 text = appointment.patientName,
                 style = MaterialTheme.typography.titleMedium,
@@ -101,6 +116,8 @@ fun AppointmentCard(
                 )
             }
 
+            // --- Indicador de Erro de E-mail ---
+            // Esta seção só é exibida se houver um erro no envio do e-mail.
             if (appointment.emailStatus == "ERROR") {
                 Spacer(modifier = Modifier.height(8.dp))
                 Row(
@@ -123,6 +140,7 @@ fun AppointmentCard(
                 }
             }
 
+            // --- Botões de Ação ---
             Row(
                 modifier = Modifier
                     .fillMaxWidth()

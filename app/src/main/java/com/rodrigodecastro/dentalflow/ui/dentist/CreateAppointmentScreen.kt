@@ -66,6 +66,8 @@ fun CreateAppointmentScreen(
     dentistId: String,
     appointmentViewModel: AppointmentViewModel
 ) {
+    // Estados para armazenar os dados do formulário da nova consulta.
+    // Usamos `remember` para manter o estado durante as recomposições.
     var patientName by remember { mutableStateOf("") }
     var patientPhone by remember { mutableStateOf("") }
     var patientEmail by remember { mutableStateOf("") }
@@ -74,12 +76,15 @@ fun CreateAppointmentScreen(
     var procedure by remember { mutableStateOf("") }
     var notes by remember { mutableStateOf("") }
 
+    // Estados para controlar a visibilidade dos dialogs de data e hora.
     var showDatePicker by remember { mutableStateOf(false) }
     var showTimePicker by remember { mutableStateOf(false) }
 
     val createState by appointmentViewModel.createAppointmentState.collectAsState()
     val dentistName by appointmentViewModel.dentistName.collectAsState()
 
+    // Validação em tempo real para habilitar/desabilitar o botão de salvar.
+    // Garante que os campos essenciais estejam preenchidos e válidos.
     val isFormValid = patientName.isNotEmpty() &&
             patientPhone.length >= 10 &&
             isEmailValid(patientEmail) &&
@@ -87,6 +92,8 @@ fun CreateAppointmentScreen(
             time.isNotEmpty() &&
             procedure.isNotEmpty()
 
+    // Bloco que exibe o DatePickerDialog quando `showDatePicker` é verdadeiro.
+    // O estado do picker (`datePickerState`) e a lógica de confirmação são gerenciados aqui.
     if (showDatePicker) {
         val datePickerState = rememberDatePickerState()
         DatePickerDialog(
@@ -168,6 +175,9 @@ fun CreateAppointmentScreen(
                         )
                         Spacer(modifier = Modifier.height(16.dp))
 
+                        // Campo de texto para a data. É desabilitado para entrada manual
+                        // e usa o modifier `clickable` para abrir o DatePickerDialog.
+                        // Isso cria a UX de "tocar para selecionar".
                         OutlinedTextField(
                             value = date,
                             onValueChange = {},
@@ -223,6 +233,9 @@ fun CreateAppointmentScreen(
                         }
                         Spacer(modifier = Modifier.height(32.dp))
                         Column(modifier = Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                            // Botão principal para criar a consulta.
+                            // Ele é ativado apenas se o formulário for válido (`isFormValid`) e
+                            // se não houver uma operação de criação em andamento.
                             Button(
                                 onClick = {
                                     val newAppointment = Appointment(
@@ -261,6 +274,9 @@ fun CreateAppointmentScreen(
         }
     }
 
+    // Efeito executado quando o estado da criação é `Success`.
+    // Mostra a mensagem de sucesso por um breve período (1.5s) e depois
+    // navega de volta para a tela anterior, limpando o estado em seguida.
     if (createState is CreateAppointmentState.Success) {
         LaunchedEffect(createState) {
             kotlinx.coroutines.delay(1500)
@@ -270,6 +286,11 @@ fun CreateAppointmentScreen(
     }
 }
 
+/**
+ * Função utilitária para validar o formato de um e-mail.
+ * Permite que o campo seja vazio, pois a validação só deve falhar
+ * se um e-mail for inserido em formato incorreto.
+ */
 private fun isEmailValid(email: String): Boolean {
     return email.isEmpty() || Patterns.EMAIL_ADDRESS.matcher(email).matches()
 }

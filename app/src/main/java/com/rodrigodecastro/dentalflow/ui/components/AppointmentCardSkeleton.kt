@@ -17,6 +17,11 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.unit.dp
 import androidx.compose.foundation.background
 
+/**
+ * Um Composable que exibe uma versão "esqueleto" (skeleton) do `AppointmentCard`.
+ * É usado para indicar que o conteúdo está sendo carregado (Shimmer effect).
+ * Melhora a experiência do usuário ao fornecer um feedback visual imediato.
+ */
 @Composable
 fun AppointmentCardSkeleton(
     modifier: Modifier = Modifier
@@ -32,13 +37,12 @@ fun AppointmentCardSkeleton(
                 .fillMaxWidth()
                 .padding(16.dp)
         ) {
-            // Cabeçalho skeleton
+            // Cabeçalho do esqueleto
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                // Data/horário skeleton
                 Column {
                     ShimmerBox(
                         modifier = Modifier
@@ -52,8 +56,6 @@ fun AppointmentCardSkeleton(
                             .padding(top = 4.dp)
                     )
                 }
-
-                // Status skeleton
                 ShimmerBox(
                     modifier = Modifier
                         .height(14.dp)
@@ -61,7 +63,7 @@ fun AppointmentCardSkeleton(
                 )
             }
 
-            // Nome do paciente skeleton
+            // Placeholder para o nome do paciente
             ShimmerBox(
                 modifier = Modifier
                     .height(18.dp)
@@ -69,7 +71,7 @@ fun AppointmentCardSkeleton(
                     .padding(top = 12.dp)
             )
 
-            // Procedimento skeleton
+            // Placeholder para o procedimento
             ShimmerBox(
                 modifier = Modifier
                     .height(14.dp)
@@ -77,7 +79,7 @@ fun AppointmentCardSkeleton(
                     .padding(top = 8.dp)
             )
 
-            // Telefone skeleton
+            // Placeholder para o telefone
             ShimmerBox(
                 modifier = Modifier
                     .height(12.dp)
@@ -88,7 +90,11 @@ fun AppointmentCardSkeleton(
     }
 }
 
-// COMPONENTE SHIMMER
+/**
+ * O bloco de construção básico para o efeito shimmer/skeleton.
+ * É apenas uma caixa com um fundo cinza semitransparente e cantos arredondados.
+ * @param modifier O modificador para controlar o tamanho e a forma da caixa.
+ */
 @Composable
 fun ShimmerBox(
     modifier: Modifier = Modifier
@@ -101,6 +107,6 @@ fun ShimmerBox(
             )
             .clip(RoundedCornerShape(4.dp))
     ) {
-        // Conteúdo vazio - só mostra o background
+        // O conteúdo é vazio, pois o objetivo é apenas exibir o fundo como um placeholder.
     }
 }
