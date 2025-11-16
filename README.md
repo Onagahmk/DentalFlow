@@ -24,17 +24,28 @@ O backend é desenvolvido com Firebase, fornecendo sincronização de dados em t
 ◦Cloud Functions: Para automação no lado do servidor.◦Cloud Messaging (FCM): Para as notificações push.
 
 📂 Estrutura do ProjetoO repositório está organizado em duas partes principais:.
+
 ├── 📱 app/                  # Contém todo o código-fonte do aplicativo Android.
+
 │   ├── src/main/java/
+
 │   │   └── com/rodrigodecastro/dentalflow/
+
 │   │       ├── navigation/   # Grafo de navegação e lógica.
+
 │   │       ├── ui/           # Telas da UI (Composable functions).
+
 │   │       ├── viewmodel/    # ViewModels para a lógica de negócios.
+
 │   │       └── MainActivity.kt
+
 │
 └── ☁️ firebase-functions/   # Contém o código backend (Node.js) para as Firebase Cloud Functions.
+
     └── functions/
+    
         └── index.js        # Arquivo principal com a lógica serverless.
+        
         ☁️ Detalhes das Firebase Cloud Functions1.sendAppointmentNotification
         ◦Gatilho: Quando um novo documento é criado na coleção appointments.
         ◦Ação: Envia uma notificação push para o tópico all (assinado pelo app do dentista) com os detalhes da nova consulta.2.updateAppointmentOnEmailStatus
