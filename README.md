@@ -34,12 +34,21 @@ Ele oferece uma interface fluida e intuitiva para dentistas, enquanto automatiza
 
 .
 ├── 📱 app/                  # Código-fonte do aplicativo Android.
+
 │   ├── data/               # Camada de dados (Models e Repositórios).
+
 │   ├── navigation/         # Lógica de navegação (NavHost).
+
 │   ├── services/# Serviços em segundo plano (Firebase Messaging).
+
 │   ├── ui/                 # Camada de UI (Telas, Componentes e Temas).
+
 │   └── viewmodel/          # Camada de lógica de negócios (ViewModels).
+
 │
 └── ☁️ firebase-functions/   # Código backend para as Firebase Cloud Functions (Node.js).
-    └── functions/
-      └── index.js        # Lógica das funções serverless.
+
+  └── functions/
+  
+   └── index.js        # Lógica das funções serverless.
+      
